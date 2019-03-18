@@ -8,7 +8,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
+import java.util.List;
 
 
 public class imageParser {
@@ -16,7 +18,7 @@ public class imageParser {
     ArrayList<String> color = new ArrayList<String>();
     ArrayList<String> duplicateList = new ArrayList<String>();
 
-    public ArrayList<String> parse(String file) {
+    public ArrayList<String> parse(String file) throws SQLException {
 
         String imageValue = "";
         //instantiates the color averages
@@ -93,19 +95,27 @@ public class imageParser {
         return color;
     }
 
-    private boolean checkDatabase() {
+    private boolean checkDatabase() throws SQLException{
         String avgRED = "";
         String avgGREEN = "";
         String avgBLUE = "";
         int counter = 0;
         int DuplicateListCounter = 0;
         //tolerance range (number/255)
-        int tolerance = 3;
+        int tolerance = 5;
 
         boolean PossibleDuplicate = false;
         int duplicate = 0;
 
-
+        String query = "SELECT DISTINCT ic1.item_id from item_color AS ic0," +
+                "item_color AS ic1, item_color AS ic2," +
+                "item_color AS ic3, item_color AS ic4," +
+                "item_color AS ic5, item_color AS ic6," +
+                "item_color AS ic7, item_color AS ic8," +
+                "item_color AS ic9, item_color AS ic10," +
+                "item_color AS ic11, item_color AS ic12," +
+                "item_color AS ic13, item_color AS ic14," +
+                "item_color AS ic15 where ";
         //generates query into the image table
         //creates an array with the ids for every possible duplicate
         for (int i = 0; i < 16; i++) {
@@ -116,70 +126,32 @@ public class imageParser {
             avgBLUE = color.get(counter);
             counter++;
 
-            String query = "SELECT item_id from item_color where red BETWEEN " + (Integer.parseInt(avgRED) - tolerance) + " AND " + (avgRED + tolerance) + " AND green BETWEEN " + (Integer.parseInt(avgGREEN) - tolerance)
-                    + " AND " + (avgGREEN + tolerance) + " AND blue BETWEEN " + (Integer.parseInt(avgBLUE) - tolerance) + " AND " + (avgBLUE + tolerance) + ";";
-
-            // insert preparedstatement into database
-            PreparedStatement preparedStmt;
-            try {
-                preparedStmt = databaseConnector.getConnection().prepareStatement(query);
-                ResultSet result = preparedStmt.executeQuery();
-                if (result.next()) {
-
-                    duplicateList.add(result.getString("item_id"));
-                    PossibleDuplicate = true;
-                }
-
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-
+            query+= "ic"+i+".red BETWEEN " + (Integer.parseInt(avgRED) - tolerance) + " AND " + (Integer.parseInt(avgRED) + tolerance) + " AND "+"ic"+i+".green BETWEEN " + (Integer.parseInt(avgGREEN) - tolerance)
+                    + " AND " + (Integer.parseInt(avgGREEN) + tolerance) + " AND "+"ic"+i+".blue BETWEEN " + (Integer.parseInt(avgBLUE) - tolerance) + " AND " + (Integer.parseInt(avgBLUE) + tolerance) + " AND "+"ic"+i+".section_number = "+i+ " AND ";
+        }
+        //finalized query to find duplicate in system
+        query = query.substring(0, query.length()-5)+";";
+        System.out.println(query);
+        // insert preparedstatement into database
+        PreparedStatement preparedStmt = null;
+        try {
+            preparedStmt = databaseConnector.getConnection().prepareStatement(query);
+            ResultSet result = preparedStmt.executeQuery();
+            if (result.next()) {
+                return true;
+            }else{
+                return false;
             }
 
 
-        }
 
-        if (PossibleDuplicate) {
-            for (DuplicateListCounter = 0; DuplicateListCounter < duplicateList.size() - 1; DuplicateListCounter++) {
+        } catch (SQLException e) {
+            e.printStackTrace();
 
-                counter = 0;
-                for (int i = 0; i < 16; i++) {
-                    avgRED = color.get(counter);
-                    counter++;
-                    avgGREEN = color.get(counter);
-                    counter++;
-                    avgBLUE = color.get(counter);
-                    counter++;
+        } finally {
+        preparedStmt.close();
 
-                    counter++;
-
-                    String query = "SELECT item_id from item_color where red BETWEEN " + (Integer.parseInt(avgRED) - tolerance) + " AND " + (avgRED + tolerance) + " AND green BETWEEN " + (Integer.parseInt(avgGREEN) - tolerance) + " AND " + (avgGREEN + tolerance)
-                            + " AND blue BETWEEN " + (Integer.parseInt(avgBLUE) - tolerance) + " AND " + (avgBLUE + tolerance) + " AND item_id ='" + duplicateList.get(DuplicateListCounter) + " LIMIT 1';";
-                    System.out.println(query);
-                    // insert preparedstatement into database
-                    PreparedStatement preparedStmt;
-                    try {
-                        preparedStmt = databaseConnector.getConnection().prepareStatement(query);
-                        ResultSet result = preparedStmt.executeQuery();
-                        if (result.next()) {
-                            duplicate += 1;
-                        }
-
-
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-
-                    }
-
-
-                }
-                if (duplicate == 16) {
-                    return true;
-                }else{
-                    duplicate = 0;
-                }
-            }
-        }
+    }
         return false;
     }
 }
