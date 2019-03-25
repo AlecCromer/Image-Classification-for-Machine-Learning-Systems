@@ -1,5 +1,6 @@
 package application;
 
+import controller.AlertPopUps;
 import javafx.application.*;
 import javafx.event.ActionEvent;
 import javafx.fxml.*;
@@ -12,7 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Random;
 
-import controller.loginController;
+import controller.LoginController;
 
 public class MainClass extends Application {
 	Random rand = new Random();
@@ -22,7 +23,7 @@ public class MainClass extends Application {
 	public void start(Stage primaryStage) {
 		try {
 
-			Parent root = FXMLLoader.load(getClass().getClassLoader().getResource("login.fxml"));
+			Parent root = FXMLLoader.load(getClass().getClassLoader().getResource("view/login.fxml"));
 			Scene scene = new Scene(root);
 			primaryStage.setTitle("Login");
 			primaryStage.setScene(scene);
@@ -82,7 +83,7 @@ public class MainClass extends Application {
 					ResultSet result = preparedStmt.executeQuery();
 					if(result.next()) {
 						alert.LoginSuccessful();
-						loginController login = new loginController();
+						LoginController login = new LoginController();
 						login.photoView(event);
 					}else {
 						alert.LoginError();
