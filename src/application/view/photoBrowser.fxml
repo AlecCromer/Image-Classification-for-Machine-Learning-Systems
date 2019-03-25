@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Rectangle2D?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane prefHeight="400.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.PhotoBrowserController">
+  <children>
+      <TabPane fx:id="tabPane" prefHeight="400.0" prefWidth="640.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <tabs>
+          <Tab fx:id="photosPane" text="Photos">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0">
+                     <children>
+                        <TableView fx:id="photoList" layoutX="12.0" layoutY="45.0" prefHeight="280.0" prefWidth="618.0" AnchorPane.bottomAnchor="46.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="45.0">
+                          <columns>
+                            <TableColumn fx:id="imageTitle" prefWidth="75.0" text="Title" />
+                            <TableColumn fx:id="imageDescription" prefWidth="151.0" text="Description" />
+                            <TableColumn fx:id="photoImage" prefWidth="388.0" text="Image" />
+                          </columns>
+                        </TableView>
+                        <Button fx:id="loginReturnPhotos" layoutX="564.0" layoutY="331.0" mnemonicParsing="false" onAction="#returnToLogin" prefHeight="26.0" prefWidth="62.0" text="Log Off" AnchorPane.bottomAnchor="14.0" AnchorPane.rightAnchor="14.0" />
+                        <TextField fx:id="searchTagBox" layoutX="14.0" layoutY="14.0" promptText="Search for Tags" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="14.0" />
+                        <Button fx:id="searchButton" layoutX="172.0" layoutY="14.0" mnemonicParsing="false" onAction="#search" text="Search" AnchorPane.leftAnchor="172.0" AnchorPane.topAnchor="14.0" />
+                        <Button layoutX="544.0" layoutY="14.0" mnemonicParsing="false" onAction="#SaveImages" text="Save Images" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0" />
+                     </children>
+                  </AnchorPane>
+            </content>
+          </Tab>
+          <Tab fx:id="ActivePhotoPane" text="Photo">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0">
+                     <children>
+                        <Button fx:id="loginReturnSearchTags" layoutX="564.0" layoutY="331.0" mnemonicParsing="false" onAction="#returnToLogin" prefHeight="26.0" prefWidth="62.0" text="Log Off" AnchorPane.bottomAnchor="14.0" AnchorPane.rightAnchor="14.0" />
+                        <Button fx:id="activePhotoBackButton" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" onAction="#backToPhotoList" text="Back" />
+                        <TextArea fx:id="activePhotoDescription" layoutX="35.0" layoutY="131.0" prefHeight="200.0" prefWidth="200.0" promptText="No description" />
+                        <TextArea fx:id="activePhotoTitle" layoutX="35.0" layoutY="77.0" prefHeight="19.0" prefWidth="200.0" promptText="No Title" />
+                        <ImageView fx:id="activePhoto" fitHeight="295.0" fitWidth="386.0" layoutX="244.0" layoutY="27.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="49.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="27.0" />
+                     </children>
+                  </AnchorPane>
+            </content>
+          </Tab>
+          <Tab fx:id="InsertPhotoPane" text="Insert Photo">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0">
+                     <children>
+                        <Button fx:id="selectPhotoButton" layoutX="74.0" layoutY="55.0" mnemonicParsing="false" onAction="#selectPhoto" text="Select Photo" AnchorPane.leftAnchor="74.0" AnchorPane.topAnchor="55.0" />
+                        <TextField fx:id="uploadImageTitle" layoutX="41.0" layoutY="109.0" promptText="Title" AnchorPane.leftAnchor="41.0" AnchorPane.topAnchor="109.0" />
+                        <TextArea fx:id="uploadImageDescription" layoutX="15.0" layoutY="145.0" prefHeight="99.0" prefWidth="200.0" promptText="Description" AnchorPane.leftAnchor="15.0" AnchorPane.topAnchor="145.0" />
+                        <TextField fx:id="uploadImageTag" layoutX="41.0" layoutY="266.0" prefHeight="25.0" prefWidth="107.0" promptText="Add Tag" AnchorPane.leftAnchor="41.0" AnchorPane.topAnchor="266.0" />
+                        <Button fx:id="addButton" layoutX="152.0" layoutY="266.0" mnemonicParsing="false" onAction="#addTag" text="Add" AnchorPane.leftAnchor="152.0" AnchorPane.topAnchor="266.0" />
+                        <ImageView fx:id="uploadImageView" fitHeight="203.0" fitWidth="271.0" layoutX="355.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="154.0" AnchorPane.leftAnchor="355.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0">
+                           <viewport>
+                              <Rectangle2D />
+                           </viewport></ImageView>
+                        <Button fx:id="uploadPhotoButton" layoutX="71.0" layoutY="306.0" mnemonicParsing="false" onAction="#uploadPhoto" text="Upload Photo" AnchorPane.leftAnchor="71.0" AnchorPane.topAnchor="306.0" />
+                        <Button fx:id="insertPhotoReturnToLogin" layoutX="564.0" layoutY="331.0" mnemonicParsing="false" onAction="#returnToLogin" prefHeight="26.0" prefWidth="62.0" text="Log Off" AnchorPane.rightAnchor="14.0" />
+                        <TableView fx:id="TagListTable" layoutX="220.0" layoutY="55.0" prefHeight="290.0" prefWidth="119.0" AnchorPane.bottomAnchor="26.0" AnchorPane.leftAnchor="220.0" AnchorPane.rightAnchor="301.0" AnchorPane.topAnchor="55.0">
+                          <columns>
+                            <TableColumn fx:id="tagListInsert" prefWidth="112.0" text="Tag List" />
+                          </columns>
+                        </TableView>
+                     </children>
+                  </AnchorPane>
+            </content>
+          </Tab>
+        </tabs>
+      </TabPane>
+  </children>
+</AnchorPane>

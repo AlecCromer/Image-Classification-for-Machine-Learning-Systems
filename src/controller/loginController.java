@@ -8,13 +8,12 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
-public class loginController {
+public class LoginController {
 
     @FXML
     private TextField username;
@@ -32,7 +31,7 @@ public class loginController {
     
     public void registerButton(ActionEvent event) throws Exception {
         stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-        root = FXMLLoader.load(getClass().getClassLoader().getResource("register.fxml"));
+        root = FXMLLoader.load(getClass().getClassLoader().getResource("view/register.fxml"));
         scene = new Scene(root);
         stage.setScene(scene);
     }
@@ -45,7 +44,7 @@ public class loginController {
     }
 	public void photoView(ActionEvent event) throws IOException {
         stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-        root = FXMLLoader.load(getClass().getClassLoader().getResource("photoBrowser.fxml"));
+        root = FXMLLoader.load(getClass().getClassLoader().getResource("view/photoBrowser.fxml"));
         scene = new Scene(root);
         stage.setScene(scene);
 		

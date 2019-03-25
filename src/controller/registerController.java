@@ -3,7 +3,6 @@ package controller;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
-import application.AlertPopUps;
 import application.MainClass;
 import application.databaseConnector;
 import javafx.event.ActionEvent;
@@ -14,7 +13,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 
-public class registerController {
+public class RegisterController {
 
 	@FXML
 	private TextField usernameRegister, passwordRegister, emailRegister, nameRegister;
@@ -32,7 +31,7 @@ public class registerController {
 	public void returnToLogin(ActionEvent event) throws Exception {
 		System.out.println("User went back to the login page.");
 		stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-		root = FXMLLoader.load(getClass().getClassLoader().getResource("login.fxml"));
+		root = FXMLLoader.load(getClass().getClassLoader().getResource("view/login.fxml"));
 		scene = new Scene(root);
 		stage.setScene(scene);
 	}
@@ -63,7 +62,7 @@ public class registerController {
 				alert.RegisterSuccessful();
 
 				stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-				root = FXMLLoader.load(getClass().getClassLoader().getResource("login.fxml"));
+				root = FXMLLoader.load(getClass().getClassLoader().getResource("view/login.fxml"));
 				scene = new Scene(root);
 				stage.setScene(scene);
 			}

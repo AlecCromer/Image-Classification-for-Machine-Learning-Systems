@@ -1,5 +1,7 @@
 package application;
 
+import controller.AlertPopUps;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -8,12 +10,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
-import java.util.List;
 
 
-public class imageParser {
+public class ImageParser {
     AlertPopUps alert = new AlertPopUps();
     ArrayList<String> color = new ArrayList<String>();
     ArrayList<String> duplicateList = new ArrayList<String>();

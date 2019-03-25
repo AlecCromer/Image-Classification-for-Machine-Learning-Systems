@@ -1,16 +1,11 @@
 package controller;
-//Alec
-//SELECT title, description, content FROM item i, tagmap tm, tags t WHERE i.itemId = tm.photo_id AND tm.tag_id = t.tag_id AND (t.tag_title IN ('smash')) AND i.itemId NOT IN (SELECT i.itemId FROM item i, tagmap tm, tags t WHERE i.itemId = tm.photo_id AND tm.tag_id = t.tag_id AND t.tag_title = 'falco') GROUP BY i.itemId HAVING COUNT( i.itemId ) =1
+
+
 import java.awt.FileDialog;
 import java.awt.Frame;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -30,7 +25,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableCell;
@@ -48,8 +42,9 @@ import javafx.stage.Stage;
 
 import model.Photo;
 import model.Tag;
+import model.Search;
 
-public class photoBrowserController implements Initializable{
+public class PhotoBrowserController implements Initializable{
 	
 	@FXML
     private TabPane tabPane;
@@ -118,12 +113,14 @@ public class photoBrowserController implements Initializable{
 	AlertPopUps alert = new AlertPopUps();
 	MainClass main = new MainClass();
 	Random rand = new Random();
+	Search search = new Search();
 
 	ArrayList<String> tagArray = new ArrayList<String>();
 
+	ArrayList<String> Array = new ArrayList<String>();
+	ArrayList<String> ArraySubtract = new ArrayList<String>();
 	List<String> deduped;
-	int tagId;
-	int photoId;
+
 	private Image image;
 	private String red, green, blue;
 	private ArrayList<String> image_color = new ArrayList<String>();
@@ -131,33 +128,27 @@ public class photoBrowserController implements Initializable{
 	
 
 	private String text;
-	List<String> dedupedList;
-	List<String> dedupedListSubtract;
-	ArrayList<String> Array = new ArrayList<String>();
-	ArrayList<String> ArraySubtract = new ArrayList<String>();
-	
-	int searchCounter;
 
-
-	String dedupedSearch ="";
-	String dedupedSearchSubtract ="";
 
 	@Override
-	public void initialize(URL url, ResourceBundle arg1) {
+	public void initialize(URL url, ResourceBundle arg1){
 			uploadImageDescription.setWrapText(true);
 			activePhotoDescription.setWrapText(true);
-			//setSQLQuery("select title, description, content FROM item");
-			tableFill("select title, description, content FROM item");
+		try {
+			tableFill(Photo.queryImageList());
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+	}
 
 	public ObservableList<Photo> getItems() {
 		return photoList.getItems();
 	}
 
-	public void tableFill(String string) {
+	public void tableFill(ResultSet rs) {
 		try {
 
-			photoList.setItems(getPhotoList(string));
+			photoList.setItems(getPhotoList(rs));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			System.out.println("UNABLE TO FILL TABLE");
@@ -165,8 +156,7 @@ public class photoBrowserController implements Initializable{
 		}
 
 		photoList.setOnMouseClicked((MouseEvent event) -> {
-			//activePhotoDescription, activePhotoTitle, activePhoto
-			//
+
             if (event.getButton().equals(MouseButton.PRIMARY) && event.getClickCount() == 2){
             	tabPane.getSelectionModel().select(ActivePhotoPane);
             	Photo photo = photoList.getSelectionModel().getSelectedItem();
@@ -182,8 +172,9 @@ public class photoBrowserController implements Initializable{
 	photoImage.setCellFactory(param -> {
 	       //Set up the ImageView
 	       final ImageView imageview = new ImageView();
+        imageview.setPreserveRatio(true);
 	       imageview.setFitHeight(200);
-	       //imageview.setFitWidth(200);
+
 
 	       //Set up the Table
 	       TableCell<Photo, Image> cell = new TableCell<Photo, Image>() {
@@ -200,23 +191,31 @@ public class photoBrowserController implements Initializable{
 	photoImage.setCellValueFactory(new PropertyValueFactory<Photo, Image>("content"));
 	}
 
+
+
 	// logs the user out of the app
 	public void returnToLogin(ActionEvent event) throws Exception {
 		System.out.println("User went back to the login page.");
 		stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-		root = FXMLLoader.load(getClass().getClassLoader().getResource("login.fxml"));
+		root = FXMLLoader.load(getClass().getClassLoader().getResource("view/login.fxml"));
 		scene = new Scene(root);
 		stage.setScene(scene);
 		
 		
 	}
-	
+	public void SaveImages() throws Exception{
+		ImagePuller imgPuller = new ImagePuller();
+		//selects the directory for the images to be stored
+		imgPuller.directorySelect(searchTagBox.getText());
+
+
+	}
 	//takes formatted text and upodates the table
-	public void updateTable(String searchString) {
+	public void updateTable(String searchString) throws Exception {
 		boolean subtract = false;
-		boolean add = true;
-		searchCounter = 0;
-			photoBrowserController PHD = new photoBrowserController();
+		boolean add = false;
+		search.setSearchCounter(0);
+
 			
 			Scanner scan = new Scanner(searchString);
 			while (scan.hasNext()) {
@@ -226,8 +225,8 @@ public class photoBrowserController implements Initializable{
 					ArraySubtract.add(text);
 
 					// deduped is the tag list that has been removed of duplicates and blanks
-					dedupedListSubtract = ArraySubtract.stream().distinct().collect(Collectors.toList());
-					System.out.println("deduped subtract is" + dedupedListSubtract);
+					search.setDedupedListSubtract(ArraySubtract.stream().distinct().collect(Collectors.toList()));
+					System.out.println("deduped subtract is" + search.getDedupedListSubtract());
 					subtract = true;
 				} else {
 
@@ -236,88 +235,57 @@ public class photoBrowserController implements Initializable{
 					Array.add(text);
 
 					// deduped is the tag list that has been removed of duplicates and blanks
-					dedupedList = Array.stream().distinct().collect(Collectors.toList());
-					System.out.println("deduped is" + dedupedList);
+					search.setDedupedList(Array.stream().distinct().collect(Collectors.toList()));
+					System.out.println("deduped is" + search.getDedupedList());
 				}
 			}
 
-			if(add == true) {
-				if(subtract ==true) {
-					searchStringAdd();
-					searchStringSubtract();
+			if(add) {
+				if(subtract) {
+					search.searchStringAdd();
+					search.searchStringSubtract();
 
-					tableFill("SELECT title, description, content FROM item i, tagmap tm, tags t WHERE i.itemId = tm.photo_id AND tm.tag_id = t.tag_id AND (t.tag_title IN ("+dedupedSearch+")) AND i.itemId NOT IN (SELECT i.itemId FROM item i, tagmap tm, tags t WHERE i.itemId = tm.photo_id AND tm.tag_id = t.tag_id AND t.tag_title = "+dedupedSearchSubtract+") GROUP BY i.itemId HAVING COUNT( i.itemId ) ="+searchCounter);
+					tableFill(Photo.searchSubtract(search.getDedupedSearch(), search.getDedupedSearchSubtract(), search.getSearchCounter()));
 				}else{
-					searchStringAdd();
+					search.searchStringAdd();
 
-					tableFill("SELECT title, description, content FROM tagmap tm, item i, tags t WHERE tm.tag_id = t.tag_id AND (t.tag_title IN ("+dedupedSearch+")) AND i.itemId = tm.photo_id GROUP BY i.itemId HAVING COUNT( i.itemId )="+searchCounter);
+					tableFill(Photo.searchAddOnly(search.getDedupedSearch(), search.getSearchCounter()));
 				}
 			}else {
-				
-				tableFill("SELECT title, description, content FROM tagmap tm, item i, tags t WHERE tm.tag_id = t.tag_id AND (t.tag_title IN ("+dedupedSearch+")) AND i.itemId = tm.photo_id GROUP BY i.itemId HAVING COUNT( i.itemId )="+searchCounter);
+				if(subtract){
+					search.searchStringSubtract();
+					tableFill(Photo.searchSubtractOnly(search.getDedupedSearchSubtract(), search.getSearchCounter()));
+				}
 			}
 
-			dedupedSearchSubtract ="";
-			searchCounter = 0;
-			dedupedSearch = "";
-			dedupedList.removeAll(dedupedList);
-			Array.removeAll(Array);
-			ArraySubtract.removeAll(ArraySubtract);
+			search.setSearchCounter(0);
+			if(add){
+				search.removeAddList();
+				Array.removeAll(Array);
+				search.setDedupedSearch("");
+			}
+			if(subtract){
+				search.removeSubtractList();
+				ArraySubtract.removeAll(ArraySubtract);
+				search.setDedupedSearchSubtract("");
+			}
+
 			
 		}
-	
-	public void searchStringAdd() {
-		searchCounter = 0;
-		dedupedSearch = "";
-		for (String object : dedupedList) {
 
-			System.out.println(object);
-			if (searchCounter == 0) {
-				dedupedSearch = "'" + object + "'";
-				searchCounter++;
-			} else {
-				dedupedSearch = dedupedSearch + ",'" + object + "'";
-				searchCounter++;
-			}
 
-		}
-		System.out.println(dedupedSearch);
-	}
-	
-	public void searchStringSubtract() {
-		searchCounter = 0;
-		dedupedSearchSubtract ="";
-		for (String object : dedupedListSubtract) {
-			object = object.substring(1);
-			System.out.println(object);
-			if (searchCounter == 0) {
-				dedupedSearchSubtract = "'" + object + "'";
-				searchCounter++;
-			} else {
-				dedupedSearchSubtract = dedupedSearchSubtract + ",'" + object + "'";
-				searchCounter++;
-			}
-		}
-		System.out.println(dedupedSearchSubtract);
-
-	}
 	// User presses the select photo button and it gets displayed on screen
-	public void selectPhoto(ActionEvent event){
+	public void selectPhoto(ActionEvent event) throws SQLException{
+
+
 		String file = fileChooser();
 		Image image = new Image("file:" + file);
 		uploadImageView.setImage(image);
-		imageParser parser = new imageParser();
-		image_color = parser.parse(file);
 
-		System.out.println("The last value in the image_color array is "+image_color.get(image_color.size()-1));
-
-			if(image_color.get(image_color.size()-1) == "duplicate"){
-				uploadImageView.setImage(null);
-				filePath = null;
-				alert.ImageDuplicate();
-			}
-
-
+		if(!Photo.parseImage(file)){
+            alert.ImageDuplicate();
+            uploadImageView.setImage(null);
+        }
 	}
 
 	// popup for user to select photo
@@ -345,9 +313,9 @@ public class photoBrowserController implements Initializable{
 	// user presses the upload photo button
 	public void uploadPhoto(ActionEvent event) throws Exception {
 		System.out.println("User pressed the upload photo button");
-		if (uploadCheck()) {
+		if (uploadCheck(uploadImageTitle.getText(),uploadImageDescription.getText())) {
 			stage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-			root = FXMLLoader.load(getClass().getClassLoader().getResource("photoBrowser.fxml"));
+			root = FXMLLoader.load(getClass().getClassLoader().getResource("view/photoBrowser.fxml"));
 			scene = new Scene(root);
 			stage.setScene(scene);
 
@@ -356,117 +324,27 @@ public class photoBrowserController implements Initializable{
 	}
 
 	// The photo gets checked to see if the user added a title and description
-	public boolean uploadCheck() throws Exception {
+	public boolean uploadCheck(String title, String description) throws Exception {
 
 		System.out.println("User pressed the register submit button.");
-		System.out.println("The user uploaded " + uploadImageTitle.getText());
+		System.out.println("The user uploaded " + title);
 		System.out.println(
-				"The description for " + uploadImageTitle.getText() + " is " + uploadImageDescription.getText());
+				"The description for " + title + " is " + description);
 
 		// checks if the user left something blank
-
-
-			if (filePath == null || uploadImageTitle.getText().isEmpty() || uploadImageDescription.getText().isEmpty()) {
+			if (filePath == null || title.isEmpty() || description.isEmpty()) {
 				alert.UploadError();
 				return false;
 			} else {
-				uploadToDatabase(uploadImageTitle.getText(), uploadImageDescription.getText());
+                // photo and tags get added
+			    Photo photoInsert = new Photo(filePath);
+                Tag taginsert = new Tag(photoInsert.insertPhotoIntoDatabase(title, description));
+
+                taginsert.scanTagList(deduped);
+
 				alert.UploadSuccessful();
 				return true;
 			}
-	}
-
-	// photo gets sent to database as a blob
-	private void uploadToDatabase(String Title, String description) throws SQLException, FileNotFoundException {
-
-			javaxt.io.Image imageStat = new javaxt.io.Image(filePath);
-			java.util.HashMap<Integer, Object> exif = imageStat.getExifTags();
-			String latitude = "NA";
-			String longitude = "NA";
-			String camera = "NA";
-			try {
-				double[] gps = imageStat.getGPSCoordinate();
-
-				System.out.println("Camera: " + exif.get(0x0110));
-				System.out.println("Latitude: " + gps[1]);
-				System.out.println("Longitude: " + gps[0]);
-
-				latitude = String.valueOf(gps[1]);
-				longitude = String.valueOf(gps[0]);
-
-				if (exif.get(0x0110) == null || exif.get(0x0110) == ""){
-					camera = "NA";
-				}else{
-					camera = String.valueOf(exif.get(0x0110));
-				}
-
-			}catch(Exception e){
-				latitude = "NA";
-				longitude = "NA";
-			}
-
-
-			// generates a random ID
-			int random = rand.nextInt(10000000) + 1;
-
-				// generates query into the userinfo table
-				String query = "INSERT INTO `item` (`itemId`, `title`, `description`, `content`, `camera`, `latitude`, `longitude`)" + " VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-			// insert preparedstatement into database
-			PreparedStatement preparedStmt = null;
-			try {
-				preparedStmt = databaseConnector.getConnection().prepareStatement(query);
-				InputStream inputStream = new FileInputStream(new File(filePath));
-				preparedStmt.setInt(1, random);
-				preparedStmt.setString(2, Title);
-				preparedStmt.setString(3, description);
-				preparedStmt.setBlob(4, inputStream);
-				preparedStmt.setString(5, camera);
-				preparedStmt.setString(6, latitude);
-				preparedStmt.setString(7, longitude);
-				preparedStmt.execute();
-				photoId = random;
-			} catch (SQLException e) {
-				e.printStackTrace();
-				// If the ID already exists, it throws this stack trace, and then it reruns, and
-				// generates a new ID
-				preparedStmt.close();
-				uploadToDatabase(Title, description);
-			}
-				int counter = 0;
-				for(int i = 0;i<16;i++) {
-					preparedStmt = null;
-					query = "INSERT INTO `item_color` (`item_id`, `section_number`, `red`, `green`, `blue`)" + " VALUES (?, ?, ?, ?, ?)";
-
-					String red, green, blue;
-					red = image_color.get(counter);
-					counter++;
-					green = image_color.get(counter);
-					counter++;
-					blue = image_color.get(counter);
-					counter++;
-
-					try {
-						preparedStmt = databaseConnector.getConnection().prepareStatement(query);
-						preparedStmt.setInt(1, random);
-						preparedStmt.setInt(2, i);
-						preparedStmt.setString(3, red);
-						preparedStmt.setString(4, green);
-						preparedStmt.setString(5, blue);
-						preparedStmt.execute();
-					} catch (SQLException e) {
-						e.printStackTrace();
-					} finally {
-						preparedStmt.close();
-
-					}
-
-				}
-
-				// tags get added
-				ForLoopArrayList();
-
-
 	}
 
 	//when user presses "add tag"
@@ -500,131 +378,20 @@ public class photoBrowserController implements Initializable{
 	public ObservableList<Tag>/* <String> */ getTagList() {
 		ObservableList<Tag>/* <String> */ tagList = FXCollections.observableArrayList();
 
-
-
 		for (String object : deduped) {
 			tagList.add(new Tag(object));
 		}
 		return tagList;
 	}
 
-	private void ForLoopArrayList() throws SQLException, FileNotFoundException {
-
-		// scans each tag is the fixed arrayList
-		for (String object : deduped) {
-			String userName = "SELECT tags.tag_title FROM tags WHERE tag_title = '" + object + "';";
-			PreparedStatement preparedStmt;
-			preparedStmt = databaseConnector.getConnection().prepareStatement(userName);
-			ResultSet result = preparedStmt.executeQuery();
-			if (result.next()) {
-				System.out.println("Tag exists");
-				uploadTagDatabase(object, true);
-			} else {
-				System.out.println("Tag doesn't exists");
-				uploadTagDatabase(object, false);
-			}
-		}
-	}
-
-	// tag table gets updated
-	private void uploadTagDatabase(String object, boolean exists) throws SQLException {
-		// generates query into the userinfo table
-		String query = "INSERT INTO `tags` (`tag_id`, `tag_title`)" + " VALUES (?, ?)";
-
-		// generates a random ID
-		int random = rand.nextInt(10000000) + 1;
-
-		// insert preparedstatement into database
-		if (!exists) {
-			PreparedStatement preparedStmt = null;
-			try {
-				preparedStmt = databaseConnector.getConnection().prepareStatement(query);
-
-				preparedStmt.setInt(1, random);
-				preparedStmt.setString(2, object);
-				preparedStmt.execute();
-
-				tagId = random;
-
-			} catch (SQLException e) {
-				e.printStackTrace();
-				// If the ID already exists, it throws this stack trace, and then it reruns, and
-				// generates a new ID
-				preparedStmt.close();
-				uploadTagDatabase(object, exists);
-
-			} finally {
-				preparedStmt.close();
-				// tag has been successfully added, now to update the tagmap
-
-				updateTagMap(false, object);
-			}
-		} else {
-			updateTagMap(true, object);
-		}
-
-	}
-
-	private void updateTagMap(boolean exists, String object) throws SQLException {
-		// generates query into the tagmap table
-		String query = "INSERT INTO `tagmap` (`tagmap_id`, `photo_id`, `tag_id`)" + " VALUES (?, ?, ?)";
-
-		// generates a random ID
-		int random = rand.nextInt(1000000) + 1;
-		System.out.println(random + " " + photoId + " " + tagId);
-		if (!exists) {
-			// If the tag did not exist before upload
-
-			// insert preparedstatement into database
-			PreparedStatement preparedStmt = null;
-			try {
-				preparedStmt = databaseConnector.getConnection().prepareStatement(query);
-
-				preparedStmt.setInt(1, random);
-				preparedStmt.setInt(2, photoId);
-				preparedStmt.setInt(3, tagId);
-				preparedStmt.execute();
-
-			} catch (SQLException e) {
-				e.printStackTrace();
-				// If the ID already exists, it throws this stack trace, and then it reruns, and
-				// generates a new ID
-				preparedStmt.close();
-				updateTagMap(exists, object);
-
-			} finally {
-				preparedStmt.close();
-
-			}
-			// tag map has been updated
-		} else {
-			System.out.println("The tag exists in database, retrieve info");
-			String tagIdQuery = "SELECT tags.tag_id FROM tags WHERE tag_title = '" + object + "';";
-			System.out.println(object);
-
-			PreparedStatement preparedStmt;
-			preparedStmt = databaseConnector.getConnection().prepareStatement(tagIdQuery);
-			ResultSet result = preparedStmt.executeQuery();
-			result.next();
-			String tag_id = result.getString(1);
-			System.out.println(tag_id);
-			tagId = Integer.parseInt(tag_id);
-			System.out.println(random + " " + photoId + " " + tagId);
-			updateTagMap(!exists, object);
-
-		}
-	}
 	
-    public ObservableList<Photo>/*<String>*/  getPhotoList(String SQL) throws IOException
+    public ObservableList<Photo>/*<String>*/  getPhotoList(ResultSet rs) throws IOException
     {
         ObservableList<Photo>/*<String>*/ photos = FXCollections.observableArrayList();
 
-        
-        int i = 0;
         try(
-                Connection conn = databaseConnector.getConnection();
-                PreparedStatement displayprofile = conn.prepareStatement(SQL);
-                ResultSet resultSet = displayprofile.executeQuery()
+
+                ResultSet resultSet = rs
 
 		){
             while (resultSet.next()){
@@ -655,7 +422,7 @@ public class photoBrowserController implements Initializable{
     	if (searchTagBox.getText().isEmpty()){
     		System.out.println("search box is empty");
 
-    		tableFill("select title, description, content FROM item");
+			tableFill(Photo.queryImageList());
     	}else {
     			System.out.println(getItems());
     			updateTable(searchTagBox.getText());
